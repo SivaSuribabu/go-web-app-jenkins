@@ -8,28 +8,28 @@ pipeline {
     }
 
     stages {
-        stage('Checkout'){
+        stage('Checkout') {
             steps {
                 sh 'echo passed'
-                //withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
-                    //sh 'git clone https://${GIT_TOKEN}@github.com/${GITHUB_REPO}.git'
-                }
+                // withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
+                //     sh 'git clone https://${GIT_TOKEN}@github.com/${GITHUB_REPO}.git'
+                // }
             }
         }
 
-        stage('Build'){
+        stage('Build') {
             steps {
                 sh 'go build -o go-web-app-final'
             }
         }
 
-        stage('Test'){
+        stage('Test') {
             steps {
                 sh 'go test ./...'
             }
         }
 
-        stage('Code Quality'){
+        stage('Code Quality') {
             environment {
                 scannerHome = tool 'SonarQubeScanner'
             }
@@ -42,13 +42,13 @@ pipeline {
             }
         }
 
-        stage('Dependency Check'){
+        stage('Dependency Check') {
             steps {
                 sh 'trivy fs --exit-code 0 --severity HIGH,CRITICAL .'
             }
         }
 
-        stage('Build Docker Image'){
+        stage('Build Docker Image') {
             steps {
                 script {
                     docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
@@ -56,13 +56,13 @@ pipeline {
             }
         }
 
-        stage('Image Scanning'){
+        stage('Image Scanning') {
             steps {
                 sh "trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
             }
         }
 
-        stage('Update Kubernetes Manifests'){
+        stage('Update Kubernetes Manifests') {
             steps {
                 withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
                     script {
@@ -89,3 +89,4 @@ pipeline {
             )
         }
     }
+}
