@@ -8,7 +8,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout'){
             steps {
 		sh 'echo passed'
                 //withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
@@ -17,42 +17,42 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build'){
             steps {
                 sh 'go build -o go-web-app-final'
             }
         }
 
-        stage('Test') {
+        stage('Test'){
             steps {
                 sh 'go test ./...'
             }
         }
 
-        stage('Code Quality') {
+        stage('Code Quality'){
             environment {
                 scannerHome = tool 'SonarQubeScanner'
             }
             steps {
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('SonarQube'){
                     sh "${scannerHome}/bin/sonar-scanner"
                 }
             }
         }
 
-        stage('Dependency Check') {
+        stage('Dependency Check'){
             steps {
                 sh 'dependency-check --project go-web-app-final --scan .'
             }
         }
 
-        stage('Package') {
+        stage('Package'){
             steps {
                 sh 'tar -czf go-web-app-final.tar.gz go-web-app-final'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image'){
             steps {
                 script {
                     docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
@@ -60,13 +60,13 @@ pipeline {
             }
         }
 
-        stage('Image Scanning') {
+        stage('Image Scanning'){
             steps {
                 sh "trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Docker Image'){
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     script {
@@ -78,7 +78,7 @@ pipeline {
             }
         }
 
-        stage('Update Kubernetes Manifests') {
+        stage('Update Kubernetes Manifests'){
             steps {
                 withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     script {
