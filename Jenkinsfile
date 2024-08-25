@@ -11,8 +11,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
-                withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    git credentialsId: 'git-credentials', url: "https://github.com/${GITHUB_REPO}.git"
+                withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    git credentialsId: 'git-cred', url: "https://github.com/${GITHUB_REPO}.git"
                 }
             }
         }
