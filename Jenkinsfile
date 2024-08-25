@@ -8,7 +8,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout'){
             steps {
                 sh 'echo passed'
                 //withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
