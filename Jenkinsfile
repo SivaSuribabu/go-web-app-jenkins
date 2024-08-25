@@ -4,15 +4,15 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sivasuribabu/go-web-app-final'
         DOCKER_REGISTRY = 'docker.io'
-        GITHUB_REPO = 'SivaSuribabu/devsecops-go-web-app-main'
+        GITHUB_REPO = 'https://github.com/SivaSuribabu/go-web-app-jenkins.git'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
-                withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    git credentialsId: 'git-cred', url: "https://github.com/${GITHUB_REPO}.git"
+                withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_CREDENTIALS')]) {
+                    sh 'git clone https://${GIT_CREDENTIALS}@github.com/${GITHUB_REPO}.git'
                 }
             }
         }
@@ -80,15 +80,15 @@ pipeline {
 
         stage('Update Kubernetes Manifests') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_CREDENTIALS')]) {
                     script {
                         sh """
                         sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/manifests/deployment.yaml
-                        git config user.email "${GIT_USERNAME}"
-                        git config user.name "${GIT_USERNAME}"
+                        git config user.email "your-email@example.com"
+                        git config user.name "your-username"
                         git add k8s/manifests/deployment.yaml
                         git commit -m "Update image tag to ${BUILD_NUMBER}"
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GITHUB_REPO}.git
+                        git push https://${GIT_CREDENTIALS}@github.com/${GITHUB_REPO}.git
                         """
                     }
                 }
