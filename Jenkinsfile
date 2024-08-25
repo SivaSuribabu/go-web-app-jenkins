@@ -10,10 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                sh 'echo passed'
-                withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_CREDENTIALS')]) {
-                    sh 'git clone https://${GIT_CREDENTIALS}@github.com/${GITHUB_REPO}.git'
-                }
+                git url: 'https://github.com/SivaSuribabu/go-web-app-jenkins.git'
             }
         }
 
@@ -23,32 +20,22 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'go test ./...'
-            }
-        }
-
-        stage('Code Quality') {
+        stage('SonarQube Analysis') {
             environment {
                 scannerHome = tool 'SonarQubeScanner'
             }
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh "${scannerHome}/bin/sonar-scanner"
+                withCredentials([string(credentialsId: 'sonar-cred', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN}"
+                    }
                 }
             }
         }
 
-        stage('Dependency Check') {
+        stage('Trivy Test') {
             steps {
-                sh 'dependency-check --project go-web-app-final --scan .'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'tar -czf go-web-app-final.tar.gz go-web-app-final'
+                sh 'trivy fs .'
             }
         }
 
@@ -60,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('Image Scanning') {
+        stage('Scan Docker Image') {
             steps {
                 sh "trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
             }
@@ -80,29 +67,19 @@ pipeline {
 
         stage('Update Kubernetes Manifests') {
             steps {
-                withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_CREDENTIALS')]) {
+                withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     script {
                         sh """
-                        sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/manifests/deployment.yaml
+                        sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/manifests/deployment.yml
                         git config user.email "your-email@example.com"
-                        git config user.name "your-username"
-                        git add k8s/manifests/deployment.yaml
+                        git config user.name "your-github-username"
+                        git add k8s/manifests/deployment.yml
                         git commit -m "Update image tag to ${BUILD_NUMBER}"
-                        git push https://${GIT_CREDENTIALS}@github.com/${GITHUB_REPO}.git
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/your-github-username/${GITHUB_REPO}.git
                         """
                     }
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            emailext (
-                subject: "Build Successful: ${BUILD_NUMBER}",
-                body: "The build was successful. Build number: ${BUILD_NUMBER}",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
-            )
         }
     }
 }
