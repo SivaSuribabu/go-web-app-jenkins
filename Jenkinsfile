@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sivasuribabu/go-web-app-final'
         DOCKER_REGISTRY = 'docker.io'
-        GITHUB_REPO = 'https://github.com/SivaSuribabu/go-web-app-jenkins.git'
+        GITHUB_REPO = 'SivaSuribabu/go-web-app-jenkins.git'
     }
 
     stages {
