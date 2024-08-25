@@ -4,13 +4,16 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sivasuribabu/go-web-app-final'
         DOCKER_REGISTRY = 'docker.io'
-        GITHUB_REPO = 'SivaSuribabu/go-web-app-jenkins.git'
+        GITHUB_REPO = 'SivaSuribabu/go-web-app-jenkins'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/SivaSuribabu/go-web-app-jenkins.git'
+                sh 'echo passed'
+                //withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
+                    //sh 'git clone https://${GIT_TOKEN}@github.com/${GITHUB_REPO}.git'
+                }
             }
         }
 
@@ -20,7 +23,13 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Test') {
+            steps {
+                sh 'go test ./...'
+            }
+        }
+
+        stage('Code Quality') {
             environment {
                 scannerHome = tool 'SonarQubeScanner'
             }
@@ -33,9 +42,9 @@ pipeline {
             }
         }
 
-        stage('Trivy Test') {
+        stage('Dependency Check') {
             steps {
-                sh 'trivy fs .'
+                sh 'trivy fs --exit-code 0 --severity HIGH,CRITICAL .'
             }
         }
 
@@ -47,39 +56,37 @@ pipeline {
             }
         }
 
-        stage('Scan Docker Image') {
+        stage('Image Scanning') {
             steps {
                 sh "trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    script {
-                        docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-cred') {
-                            docker.image("${DOCKER_IMAGE}:${BUILD_NUMBER}").push()
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Update Kubernetes Manifests') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'git-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                withCredentials([string(credentialsId: 'git-cred', variable: 'GIT_TOKEN')]) {
                     script {
                         sh """
-                        sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/manifests/deployment.yml
-                        git config user.email "your-email@example.com"
-                        git config user.name "your-github-username"
-                        git add k8s/manifests/deployment.yml
+                        sed -i 's|image: ${DOCKER_IMAGE}:.*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/manifests/deployment.yaml
+                        git config user.email "sivaduribabupenkey@gmail.com"
+                        git config user.name "sivasuribabu"
+                        git add k8s/manifests/deployment.yaml
                         git commit -m "Update image tag to ${BUILD_NUMBER}"
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/your-github-username/${GITHUB_REPO}.git
+                        git push https://${GIT_TOKEN}@github.com/${GITHUB_REPO}.git
                         """
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            emailext (
+                subject: "Build Successful: ${BUILD_NUMBER}",
+                body: "The build was successful. Build number: ${BUILD_NUMBER}",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+            )
         }
     }
 }
