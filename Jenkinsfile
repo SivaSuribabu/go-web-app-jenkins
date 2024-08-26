@@ -3,8 +3,6 @@ pipeline{
     agent any
     environment {
         PATH = "/usr/local/go/bin:${PATH}"
-        SONAR_HOST_URL = 'http://172.17.0.1:9000'
-        SONAR_AUTH_TOKEN = 'sonar-cred'
     }
     
     stages{
@@ -36,18 +34,11 @@ pipeline{
             }
         }
 
-         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') { // 'SonarQubeServerName' should match the name you set in Jenkins
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=main \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN}
-                    '''
-                }
+        stage('Code Analysis'){
+            steps{
+                sh 'echo Running SonarQube Analysis'
+                sh 'sonar-scanner'
             }
-         } 
+        }
     }  
 }
