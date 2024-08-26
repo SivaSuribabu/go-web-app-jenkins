@@ -34,11 +34,21 @@ pipeline{
             }
         }
 
-        stage('Docker Build'){
-            steps{
-                sh 'echo Building Docker Image'
-                sh 'docker build -t go-web-app-jenkins .'
+        stage('Build and Push Docker Image') {
+            environment {
+                DOCKER_IMAGE = "sivasuribabu/go-web-app-jenkins:${BUILD_NUMBER}"
+                // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
+                REGISTRY_CREDENTIALS = credentials('docker-cred')
             }
+            steps {
+                script {
+                    sh 'docker build -t ${DOCKER_IMAGE} .'
+                    def dockerImage = docker.image("${DOCKER_IMAGE}")
+                    docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+                    dockerImage.push()
+                    }
+                }
+             } 
         }
     }  
 }
