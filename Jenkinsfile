@@ -23,7 +23,7 @@ pipeline{
             steps{
                 sh 'echo Building Application'
                 sh'go version'
-                sh 'go build -o main .'
+                sh 'go build -o go-web-app-jenkins .'
             }
         }
 
@@ -34,10 +34,10 @@ pipeline{
             }
         }
 
-        stage('Code Analysis'){
+        stage('Docker Build'){
             steps{
-                sh 'echo Running SonarQube Analysis'
-                sh 'sonar-scanner'
+                sh 'echo Building Docker Image'
+                sh 'docker build -t go-web-app-jenkins .'
             }
         }
     }  
