@@ -13,6 +13,12 @@ pipeline{
          }
         }
 
+        stage('Install Depenencies'){
+            steps{
+                sh 'echo Installing Dependencies'
+                sh 'go mod download'
+            }
+        }
         stage('Build Application'){
             steps{
                 sh 'echo Building Application'
