@@ -1,6 +1,6 @@
 # i want to creat a multi stage  docker file for my go lang application
 
-# Step 1: Build the go application
+# Step 1: Build the go applications
 
 FROM golang:1.22.5 as builder
 

@@ -6,7 +6,7 @@ pipeline{
     }
     
     stages{
-        stage('Checkout code'){
+        stage('Checkout code stage'){
             steps{
                 sh 'echo passed'
                 //checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/SivaSuribabu/go-web-app-jenkins.git']])
@@ -63,8 +63,8 @@ pipeline{
                     git config user.email "siva.xyz@gmail.com"
                     git config user.name "Siva Suribabu"
                     BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" go-web-app-jenkins/k8s/manifests/deployment.yaml
-                    git add go-web-app-jenkins/k8s/manifests/deployment.yaml
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s/manifests/deployment.yaml
+                    git add k8s/manifests/deployment.yaml
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                     git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                 '''
