@@ -13,7 +13,7 @@ pipeline{
         stage('Build Application'){
             steps{
                 sh 'echo Building Application'
-                sh 'go build -o go-web-app-jenkins'
+                sh 'go build -o go-web-app-jenkins .'
             }
         }
     }
