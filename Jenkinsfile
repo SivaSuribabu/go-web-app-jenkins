@@ -26,5 +26,12 @@ pipeline{
                 sh 'go build -o main .'
             }
         }
+
+        stage('Run Tests'){
+            steps{
+                sh 'echo Running Tests'
+                sh 'go test ./...'
+            }
+        }
     }
 }
