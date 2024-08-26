@@ -50,5 +50,25 @@ pipeline{
                 }
              } 
         }
+
+        stage('Update Deployment File') {
+        environment {
+            GIT_REPO_NAME = "go-web-app-jenkins"
+            GIT_USER_NAME = "SivaSuribabu"
+        }
+        steps {
+            withCredentials([string(credentialsId: 'git-cred', variable: 'GITHUB_TOKEN')]) {
+                sh '''
+                    git config user.email "siva.xyz@gmail.com"
+                    git config user.name "Siva Suribabu"
+                    BUILD_NUMBER=${BUILD_NUMBER}
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s/manifests/deployment.yml
+                    git add k8s/manifests/deployment.yml
+                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                '''
+                }   
+            }
+        }
     }  
 }
