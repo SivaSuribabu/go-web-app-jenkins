@@ -1,6 +1,9 @@
 //# i am writing jenkns file for go language applicaftion  , i am using declarative pipeline syntax, i am using jenkins pipeline to build go language application,
 pipeline{
     agent any
+    environment {
+        PATH = "/usr/local/go/bin:${PATH}"
+    }
     
     stages{
         stage('Checkout code'){
@@ -13,6 +16,7 @@ pipeline{
         stage('Build Application'){
             steps{
                 sh 'echo Building Application'
+                sh'go version'
                 sh 'go build -o main .'
             }
         }
